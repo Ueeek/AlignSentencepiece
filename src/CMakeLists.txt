@@ -127,6 +127,34 @@ set(SPM_TRAIN_SRCS
   sentencepiece_trainer.cc
   pretokenizer_for_training.cc)
 
+set(SPM_TRAIN_ALIGN_SRCS
+    ${SPM_PROTO_HDRS}
+    ${SPM_MODEL_PROTO_HDRS}
+  builder.h
+  normalization_rule.h
+  unicode_script.h
+  unicode_script_map.h
+  trainer_factory.h
+  trainer_interface.h
+  unigram_model_trainer.h
+  word_model_trainer.h
+  char_model_trainer.h
+  bpe_model_trainer.h
+  sentencepiece_trainer_align.h
+  sentencepiece_trainer.h
+  pretokenizer_for_training.h
+  builder.cc
+  unicode_script.cc
+  trainer_factory.cc
+  trainer_interface.cc
+  unigram_model_trainer.cc
+  word_model_trainer.cc
+  char_model_trainer.cc
+  bpe_model_trainer.cc
+  sentencepiece_trainer.cc
+  sentencepiece_trainer_align.cc
+  pretokenizer_for_training.cc)
+
 set(SPM_TEST_SRCS
   ${SPM_PROTO_HDRS}
   ${SPM_MODEL_PROTO_HDRS}
@@ -184,36 +212,49 @@ endif()
 if (SPM_ENABLE_SHARED)
   add_library(sentencepiece SHARED ${SPM_SRCS})
   add_library(sentencepiece_train SHARED ${SPM_TRAIN_SRCS})
+  add_library(sentencepiece_train_align ${SPM_TRAIN_ALIGN_SRCS})
+  #add_library(sentencepiece_train_align SHARED ${SPM_TRAIN_ALIGN_SRCS})
 endif()
 
 add_library(sentencepiece-static STATIC ${SPM_SRCS})
 add_library(sentencepiece_train-static STATIC ${SPM_TRAIN_SRCS})
+add_library(sentencepiece_train_align-static STATIC ${SPM_TRAIN_ALIGN_SRCS})
 
 target_link_libraries(sentencepiece-static INTERFACE ${SPM_LIBS})
 target_link_libraries(sentencepiece_train-static INTERFACE sentencepiece-static ${SPM_LIBS})
+target_link_libraries(sentencepiece_train_align-static INTERFACE sentencepiece-static_align ${SPM_LIBS})
 
 if (SPM_ENABLE_SHARED)
   target_link_libraries(sentencepiece ${SPM_LIBS})
   target_link_libraries(sentencepiece_train ${SPM_LIBS} sentencepiece)
+  target_link_libraries(sentencepiece_train_align ${SPM_LIBS} sentencepiece)
   set(SPM_INSTALLTARGETS sentencepiece sentencepiece_train sentencepiece-static sentencepiece_train-static)
+  set(SPM_INSTALLTARGETS sentencepiece sentencepiece_train_align sentencepiece-static sentencepiece_train_align-static)
   set_target_properties(sentencepiece sentencepiece_train PROPERTIES SOVERSION 0 VERSION 0.0.0)
+  set_target_properties(sentencepiece sentencepiece_train_align PROPERTIES SOVERSION 0 VERSION 0.0.0)
   set_target_properties(sentencepiece PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS YES)
   set_target_properties(sentencepiece_train PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS YES)
+  set_target_properties(sentencepiece_train_align PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS YES)
   if (MSVC)
     set_target_properties(sentencepiece PROPERTIES IMPORT_SUFFIX "_import.lib")
     set_target_properties(sentencepiece_train PROPERTIES IMPORT_SUFFIX "_import.lib")
+    set_target_properties(sentencepiece_train_align PROPERTIES IMPORT_SUFFIX "_import.lib")
   elseif (MINGW)
     set_target_properties(sentencepiece PROPERTIES IMPORT_SUFFIX ".dll.a")
     set_target_properties(sentencepiece_train PROPERTIES IMPORT_SUFFIX ".dll.a")
+    set_target_properties(sentencepiece_train_align PROPERTIES IMPORT_SUFFIX ".dll.a")
   endif()
 else()
   add_library(sentencepiece ALIAS sentencepiece-static)
   add_library(sentencepiece_train ALIAS sentencepiece_train-static)
+  add_library(sentencepiece_train_align ALIAS sentencepiece_train_align-static)
   set(SPM_INSTALLTARGETS sentencepiece-static sentencepiece_train-static)
+  set(SPM_INSTALLTARGETS sentencepiece-static sentencepiece_train_align-static)
 endif()
 
 set_target_properties(sentencepiece-static PROPERTIES OUTPUT_NAME "sentencepiece")
 set_target_properties(sentencepiece_train-static PROPERTIES OUTPUT_NAME "sentencepiece_train")
+set_target_properties(sentencepiece_train_align-static PROPERTIES OUTPUT_NAME "sentencepiece_train_align")
 
 if (NOT MSVC)
   if (SPM_COVERAGE)
@@ -243,12 +284,14 @@ add_executable(spm_encode spm_encode_main.cc)
 add_executable(spm_decode spm_decode_main.cc)
 add_executable(spm_normalize spm_normalize_main.cc)
 add_executable(spm_train spm_train_main.cc)
+add_executable(spm_train_align spm_train_align_main.cc)
 add_executable(spm_export_vocab spm_export_vocab_main.cc)
 
 target_link_libraries(spm_encode sentencepiece)
 target_link_libraries(spm_decode sentencepiece)
 target_link_libraries(spm_normalize sentencepiece sentencepiece_train)
 target_link_libraries(spm_train sentencepiece sentencepiece_train)
+target_link_libraries(spm_train_align sentencepiece sentencepiece_train_align)
 target_link_libraries(spm_export_vocab sentencepiece)
 
 if (SPM_ENABLE_NFKC_COMPILE)
@@ -257,7 +300,7 @@ if (SPM_ENABLE_NFKC_COMPILE)
 endif()
 
 list(APPEND SPM_INSTALLTARGETS
-  spm_encode spm_decode spm_normalize spm_train spm_export_vocab)
+  spm_encode spm_decode spm_normalize spm_train spm_export_vocab spm_train_align)
 
 install(TARGETS ${SPM_INSTALLTARGETS}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -273,9 +316,9 @@ if (SPM_BUILD_TEST OR SPM_COVERAGE)
   add_executable(spm_test test_main.cc ${SPM_TEST_SRCS})
 
   if (SPM_COVERAGE)
-    target_link_libraries(spm_test sentencepiece sentencepiece_train "-lgcov")
+    target_link_libraries(spm_test sentencepiece sentencepiece_train  sentencepiece_train_align "-lgcov")
   else()
-    target_link_libraries(spm_test sentencepiece sentencepiece_train)
+    target_link_libraries(spm_test sentencepiece sentencepiece_train sentencepiece_train_align)
   endif()
 
   set(MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full --show-leak-kinds=definite,possible --error-exitcode=1")

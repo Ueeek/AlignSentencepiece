@@ -107,7 +107,7 @@ class TrainerInterface {
   FRIEND_TEST(TrainerInterfaceTest, SerializeTest);
   FRIEND_TEST(TrainerInterfaceTest, CharactersTest);
 
- protected:
+ //protected:TODO changed
   // Returns true if |piece| is valid sentence piece.
   // The result is affected by
   // max_sentencepiece_length, split_by_whiespace, split_by_unicode_script.

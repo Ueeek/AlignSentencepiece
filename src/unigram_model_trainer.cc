@@ -458,6 +458,7 @@ TrainerModel::SentencePieces Trainer::FinalizeSentencePieces(
   return Sorted(final_sentencepieces);
 }
 
+
 util::Status Trainer::Train() {
   RETURN_IF_ERROR(status());
 
@@ -470,6 +471,7 @@ util::Status Trainer::Train() {
   RETURN_IF_ERROR(LoadSentences());
 
   if (trainer_spec_.train_extremely_large_corpus()) {
+      LOG(INFO)<<"large";
     auto seed_sentencepieces = MakeSeedSentencePieces<int64>();
     model.SetSentencePieces(std::move(seed_sentencepieces));
   } else {

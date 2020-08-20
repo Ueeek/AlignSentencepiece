@@ -69,8 +69,7 @@ class Trainer : public TrainerInterface {
                                            denormalizer_spec) {}
 
   util::Status Train() override;
-
- private:
+ //private:
   FRIEND_TEST(TrainerTest, IsValidSentencePieceTest);
 
   // Makes seed pieces from the training corpus.
